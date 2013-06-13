@@ -1,0 +1,38 @@
+$catalog assertNotEqual global
+subroutine assertEqual(unexpected, actual, message='') var.args
+    deffun equalsRegardingUnassigned(unexpected, actual) local
+    
+    if equalsRegardingUnassigned(unexpected, actual) then
+        gosub failEqual(actual, message)
+    end
+    return
+    
+    local function equalsRegardingUnassigned(unexpected, actual)
+        if not(assigned(unexpected)) then return not(assigned(actual))
+        deffun isEqual(unexpected, actual) local
+        return isEqual(unexpected, actual)
+    end
+    
+    local function isEqual(unexpected, actual)
+        begin case
+            case (objinfo(unexpected, 0) and objinfo(actual, 0))
+                return unexpected->equals(actual)
+            case not(objinfo(unexpected, 0) or objinfo(actual, 0))
+                return (unexpected = actual)
+        end case
+        return @false
+    end
+    
+    local subroutine failEqual(actual, message)
+        formatted = "Values should be different. "
+        if (message # '') then formatted = message : ". "
+        formatted := "Actual: " 
+        if objinfo(actual, 0) then
+            formatted := actual->toString()
+        end else
+            formatted := "<" : actual : ">"
+        end
+        call fail(formatted)
+        return
+    end
+end

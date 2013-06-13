@@ -1,8 +1,48 @@
 $debug
 $catalog assertEqual global
 subroutine assertEqual(expected, actual, message='') var.args
-    if (expected = actual) then return
-    formatted = if (message # '') then message : ' ' else message
-    formatted := "expected: <" : expected : "> but was: <" : actual : ">"
-    call assertFail(formatted)
+    deffun equalsRegardingUnassigned(expected, actual) local
+    
+    if equalsRegardingUnassigned(expected, actual) then return
+    gosub failNotEqual(expected, actual, message)
+    return
+    
+    local function equalsRegardingUnassigned(expected, actual)
+        if not(assigned(expected)) then return not(assigned(actual))
+        deffun isEqual(expected, actual) local
+        return isEqual(expected, actual)
+    end
+    
+    local function isEqual(expected, actual)
+        begin case
+            case (objinfo(expected, 0) and objinfo(actual, 0))
+                return expected->equals(actual)
+            case not(objinfo(expected, 0) or objinfo(actual, 0))
+                return (expected = actual)
+        end case
+        return @false
+    end
+    
+    local subroutine failNotEqual(expected, actual, message)
+        deffun format(expected, actual, message) local
+        call fail(format(expected, actual, message))
+        return
+    end
+    
+    local function format(expected, actual, message)
+        formatted = ''
+        if (message # '') then formatted = message : " expected: "
+        if objinfo(expected, 0) then
+            formatted := expected->toString()
+        end else
+            formatted := "<" : expected : ">"
+        end
+        formatted := " but was: "
+        if objinfo(actual, 0) then
+            formatted := actual->toString()
+        end else
+            formatted := "<" : actual : ">"
+        end
+        return formatted
+    end
 end

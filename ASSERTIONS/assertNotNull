@@ -1,0 +1,7 @@
+$catalog assertNotNull global
+subroutine assertNotNull(var, message='') var.args
+    if objinfo(var, 0) then return
+    if (assigned(var) or (var # '')) then return
+    call fail(message)
+    return
+end

@@ -1,0 +1,5 @@
+$catalog fail global
+subroutine fail(message='') var.args
+    throw "AssertionError", message
+    return
+end

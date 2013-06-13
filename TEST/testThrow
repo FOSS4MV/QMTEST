@@ -1,0 +1,17 @@
+program testThrow
+*
+* Testing try/catch and throw combos
+*
+    try
+        gosub throwException
+    catch "genericException"
+        crt @EXCEPTION
+        crt @EXCEPTION.DATA
+    end
+    stop
+    
+    local subroutine throwException()
+        throw "genericException", "Some data"
+    end
+
+end

@@ -10,12 +10,14 @@ class QMTest
     * Counts the number of test cases that will be run by this test.
     **
     public function countTestCases()
+        throw "NotImplemented", "countTestCases() method"
     end
     
     **
     * Runs a test and collects its results in a QMTestResult instance
     **    
     public sub run(result)
+        throw "NotImplemented", "run(result) method"
     end
-    
+
 end

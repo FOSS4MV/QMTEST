@@ -1,0 +1,5 @@
+$catalog assertFalse global
+subroutine assertFalse(condition, message='') var.args
+    call assertTrue(not(condition), message)
+    return
+end

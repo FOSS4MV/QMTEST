@@ -1,15 +1,53 @@
 $catalog QMTestCase global
-class QMTestCase
+class QMTestCase inherits QMTest
 
-    private label, reporter, observers, shouldSkip
-    
-    public sub create.object(myLabel='') var.args
-        label = myLabel
-        shouldSkip = @false
+    private fName
+   
+    public sub create.object(name='') var.args
+        fName = name
     end
     
-    get getLabel()
-        return if (label = '') then className(
+    public function countTestCases()
+        return 1
+    end
+    
+    public function createResult()
+        return object("QMTestResult")
+    end
+    
+    public subroutine run(result='', obj='') var.args
+        if not(objinfo(result)) then
+            result = me->createResult()
+        end
+        if not(objinfo(obj)) then
+            result->run(me)
+        end else
+            result->run(obj)
+        end
+    end
+    
+    public subroutine runBare()
+        exception = ''
+        me->setUp()
+        try
+            me->runTest()
+        catch "Running"
+            exception = "Running"
+        end
+        try
+            me->tearDown()
+        catch "TearingDown"
+            if (exception = '') then exception = "TearingDown"
+        end
+        if (exception <> '') then throw exception
+    end
+    
+    public subroutine runTest()
+        call assertNotNull(fName, "QMTestCase->fName cannot be null")
+        runMethod = ''
+        try
+            runMethod = 
+
     end
 
 end
