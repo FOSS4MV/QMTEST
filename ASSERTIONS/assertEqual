@@ -1,0 +1,8 @@
+$debug
+$catalog assertEqual global
+subroutine assertEqual(expected, actual, message='') var.args
+    if (expected = actual) then return
+    formatted = if (message # '') then message : ' ' else message
+    formatted := "expected: <" : expected : "> but was: <" : actual : ">"
+    call assertFail(formatted)
+end

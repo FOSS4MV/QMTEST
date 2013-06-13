@@ -1,0 +1,9 @@
+$catalog QMError global
+class QMError
+
+    public sub create.object(arg1='', arg2='') var.args
+        QMThrowable = object("QMThrowable", arg1, arg2)
+        inherit QMThrowable
+    end
+
+end

@@ -1,0 +1,140 @@
+$catalog QMAssert global
+class QMAssert
+    deffun isObject(obj) local
+    deffun className(obj) local
+    
+    **
+    * Asserts that a condition is true.  If it isn't then throw an
+    * {@link QMAssertionError} with the given message.
+    *
+    * @param condition the boolean condition to be checked
+    * @param message the identifying messages for the {@link QMAssertionError} (null okay)
+    **
+    public sub True(condition, message='') var.args
+        if not(condition) then me->fail(message)
+    end
+    
+    **
+    * Asserts that a condition is false.  If it isn't then thow an
+    * {@link QMAssertionError} with the given message.
+    *
+    * @param condition the boolean condition to be checked
+    * @param message the identifying messages for the {@link QMAssertionError} (null okay)
+    **
+    public sub False(condition, message='') var.args
+        me->True(not(condition), message)
+    end
+    
+    **
+    * Fails a test with the given message.
+    *
+    * @param message the identifying messages for the {@link QMAssertionError} (null okay)
+    * @see QMAssertionError
+    **
+    public sub fail(message='') var.args
+        throw "QMAssertionError", message
+    end
+    
+    **
+    * Asserts that two objects are equal. If they are not, an
+    * {@link QMAssertionError} is thrown with the given message. If
+    * <code>expected</code> and <code>actual</code> are null,
+    * they are considered equal.
+    *
+    * @param message the identifying message for the {@link QMAssertionError} (null
+    * okay)
+    * @param expected expected value
+    * @param actual actual value
+    **
+    public sub Equals(expected, actual, message='') var.args
+        begin case
+            case (isObject(expected) and isObject(actual))
+                if (expected->equals(actual)) then return
+                me->failNotEquals(expected, actual, message)
+            case (isObject(expected) or isObject(actual))
+                me->failNotEquals(expected, actual, message)
+            case 1
+                if (expected = actual) then return
+                me->failNotEquals(expected, actual, message)
+        end case
+    end
+    
+    **
+    * Asserts that two objects are <b>not</b> equals. If they are, an
+    * {@link AssertionError} without a message is thrown. If
+    * <code>unexpected</code> and <code>actual</code> are null,
+    * they are considered equal.
+    *
+    * @param unexpected unexpected value to check
+    * @param actual the value to check against <code>unexpected</code>
+    **
+    public sub NotEquals(unexpected, actual, message='') var.args
+        begin case
+            case (isObject(unexpected) and isObject(actual))
+                if (unexpected->equals(actual)) then me->failEquals(actual, message)
+            case (isObject(unexpected) or isObject(actual))
+                return
+            case 1
+                if (unexpected = actual) then me->failEquals(actual, message)
+        end case
+    end
+    
+    public sub failEquals(actual, message)
+        formatted = "Values should be different. "
+        if (message # '') then formatted := message : ". "
+        if (isObject(actual)) then
+            formatted := "Actual: <" : className(actual) : ">"
+        end else
+            formmated := "Actual: " : actual
+        end
+        me->fail(formatted)
+    end
+    
+    public sub failNotEquals(expected, actual, message)
+        me->fail(me->format(expected, actual, message))
+    end
+    
+    public function format(expected, actual, message)
+        formatted = if (message # '') then message : " " else ''
+        begin case
+            case (isObject(expected) and isObject(actual))
+                if (className(expected) # className(actual)) then
+                    formatted := "expected: "
+                    formatted := "<" : className(expected) : ">"
+                    formatted := " but was: "
+                    formatted := "<" : className(actual) : ">"
+                end else
+                    formatted := "expected: "
+                    formatted := expected->toString()
+                    formatted := " but was: "
+                    formatted := actual->toString()
+                end
+            case (isObject(expected))
+                formatted := "expected: "
+                formatted := "<" : className(expected) : ">"
+                formatted := " but was: "
+                formatted := actual
+            case (isObject(actual))
+                formatted := "expected: "
+                formatted := expected
+                formatted := " but was: "
+                formatted := "<" : actual : ">"
+            case 1
+                formatted := "expected: "
+                formatted := expected
+                formatted := " but was: "
+                formatted := actual
+        end case
+        return formatted
+    end
+    
+    local function isObject(obj)
+        return objinfo(obj, 0)
+    end
+    
+    local function className(obj)
+        if (me->isObject(obj)) then return objinfo(obj, 1)
+        return ''
+    end
+
+end

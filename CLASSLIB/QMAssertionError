@@ -1,0 +1,9 @@
+$catalog QMAssertionError global
+class QMAssertionError
+
+    public sub create.object(message='') var.args
+        QMError = object("QMError", message, me)
+        inherit QMError
+    end
+
+end

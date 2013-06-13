@@ -1,0 +1,9 @@
+$catalog className global
+function className(obj)
+    begin case
+        case (isObject(obj))
+            return objinfo(obj, 1)
+        case (isFile(obj))
+            
+    end case
+end

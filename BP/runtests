@@ -1,0 +1,6 @@
+program runtests
+
+    call assertFailNoMessage()
+    call assertFailWithMessage()
+
+end

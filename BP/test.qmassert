@@ -1,0 +1,13 @@
+program test.qmassert
+
+    assert = object("QMAssert")
+
+    try    
+        assert->Equals(1, 1, "1=1 better be true")
+        assert->Equals(1, 2, "1=2 better not be true")
+    catch "QMAssertionError"
+        error = object(@EXCEPTION, @EXCEPTION.DATA)
+        error->printStackTrace()
+    end
+
+end

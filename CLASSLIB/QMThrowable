@@ -1,0 +1,87 @@
+$catalog QMThrowable global
+class QMThrowable
+    
+    **
+    * Native code saves some indication of the stack backtrace in this slot.
+    **
+    private backtrace
+
+    **
+    * Specific details about the Throwable.  For example, for
+    * <tt>FileNotFoundException</tt>, this contains the name of
+    * the file that could not be found.
+    *
+    **
+    private detailMessage
+
+    **
+    * The throwable that caused this throwable to get thrown, or null if this
+    * throwable was not caused by another throwable, or if the causative
+    * throwable is unknown.  If this field is equal to this throwable itself,
+    * it indicates that the cause of this throwable has not yet been
+    * initialized.
+    *
+    **
+    private cause
+
+    **
+    * The stack trace, as returned by {@link #getStackTrace()}.
+    *
+    **
+    private stackTrace
+    *
+    * This field is lazily initialized on first use or serialization and
+    * nulled out when fillInStackTrace is called.
+    *
+    
+    public sub create.object(arg1='', arg2='') var.args
+        me->fillInStackTrace()
+        begin case
+            case (objinfo(arg2, 0))
+                cause = arg2
+                detailMessage = arg1
+            case (objinfo(arg1, 0))
+                cause = arg1
+                detailMessage = arg1->toString()
+            case ((arg1 # '') and (arg2 # ''))
+                detailMessage = arg1
+                cause = arg2
+            case 1
+                cause = ''
+                detailMessage = arg1
+        end case
+    end
+    
+    public function getMessage()
+        return detailMessage
+    end
+    
+    public function getLocalizedMessage()
+        return me->getMessage()
+    end
+    
+    public function getCause()
+        return cause
+    end
+    
+    public function toString()
+        s = objinfo(me, 1)
+        message = me->getLocalizedMessage()
+        return if (message # '') then (s : ": " : message) else s
+    end
+    
+    public sub printStackTrace()
+        cnt = count(stackTrace, @fm)
+        for s = cnt to 1 step -1
+            if (s < cnt) then crt "    " :
+            crt stackTrace<s,1,1> : " @ " : 
+            crt stackTrace<s,2,1> : ", line " : 
+            crt stackTrace<s,2,2>
+        next s
+    end
+    
+    public sub fillInStackTrace()
+        stackTrace = system(1002)
+    end
+    
+end

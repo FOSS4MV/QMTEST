@@ -1,0 +1,15 @@
+$catalog QMTestCase global
+class QMTestCase
+
+    private label, reporter, observers, shouldSkip
+    
+    public sub create.object(myLabel='') var.args
+        label = myLabel
+        shouldSkip = @false
+    end
+    
+    get getLabel()
+        return if (label = '') then className(
+    end
+
+end
