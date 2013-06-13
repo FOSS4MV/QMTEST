@@ -1,0 +1,14 @@
+$catalog git local
+program git
+
+    deffun errtext(errno) calling "!errtext"
+    os.execute "C:\Developer_Tools\Git\bin\":@sentence
+    if (status()) then
+        crt errtext(status())
+    end else
+        if (os.error()) then
+            crt errtext(os.error())
+        end
+    end
+
+end
