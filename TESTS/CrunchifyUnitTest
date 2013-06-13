@@ -1,0 +1,45 @@
+$catalog CrunchifyUnitTest local
+$* Class:CrunchifyUnitTest
+class CrunchifyUnitTest
+
+    $* @Test
+    $* @Method:CrunchifyAddition,5,public,sub,0
+    public sub CrunchifyAddition()
+        call assertEqual(31, me->addition(27, 3))
+    end
+    
+    $* @Test
+    $* @Method:CrunchifyDivisionByZero,10,public,sub,0
+    public sub CrunchifyDivisionByZero()
+        call assertEqual(3, me->division(9, 0))
+    end
+    
+    $* @Test
+    $* @Method:NoSuchMethod,15,public,sub,0
+    public sub NoSuchMethod()
+        call assertEqual(9, me->multiplication(3, 3))
+    end
+    
+    $* @Test
+    $* @Method:HelloWorld,20,public,sub,0
+    public sub HelloWorld()
+        call assertEqual("Hello World", me->helloWorld())
+    end
+    
+    $* @Method:addition,29,public,function,2|x|y
+    public function addition(x, y)
+        return (x + y)
+    end
+    
+    $* @Method:division,34,public,function,2|x|y
+    public function division(x, y)
+        return (x / y)
+    end
+    
+    $* @Method:helloWord,39,public,function,0
+    public function helloWorld()
+        helloWorld = "Hello " : "World"
+        return helloWorld
+    end
+
+end

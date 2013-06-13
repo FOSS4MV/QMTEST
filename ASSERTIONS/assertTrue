@@ -1,0 +1,9 @@
+$debug
+$catalog assertTrue global
+
+subroutine assertTrue(condition, message='') var.args
+    
+    if not(condition) then call assertFail(message)
+    return
+
+end

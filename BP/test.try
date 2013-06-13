@@ -1,0 +1,12 @@
+program test.try
+
+    a = 1
+    try
+        a->printme()
+    catch "EXCEPTION"
+    end
+    crt @EXCEPTION
+    crt @EXCEPTION.DATA
+    crt @EXCEPTION.ORIGIN
+
+end

@@ -1,0 +1,13 @@
+$catalog assertFailNoMessage local
+
+subroutine assertFailNoMessage()
+
+    try
+        call assertFail()
+    catch "AssertionError"
+        message = @EXCEPTION : ": " : @EXCEPTION.DATA
+        crt message
+    end
+    return
+
+end

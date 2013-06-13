@@ -1,0 +1,22 @@
+$catalog QMObject global
+class QMObject
+
+    private guid
+    
+    public sub create.object()
+        guid = system(1047)
+    end
+    
+    public function getGUID()
+        return guid
+    end
+    
+    public function hashCode()
+        return md5(me->getGUID())
+    end
+    
+    public function same(obj)
+        return (me->getGUID() = obj->getGUID())
+    end
+
+end

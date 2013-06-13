@@ -1,0 +1,40 @@
+$catalog start local
+program start
+
+    className = @SENTENCE[' ', 2, 1]
+    obj = object(className)
+    if (objinfo(obj, 0)) then
+        call !FINDPROG(result, className)
+        annotations = result<4>
+        passes = 0
+        fails = 0
+        errors = 0
+        for each annotation in annotations
+            if (annotation[1,6] = "@Test:") then
+                try
+                    *
+                    * @Test annotation format is
+                    * @Test:method,line,visibility,type,paramcnt|param1=value1|param2=value2|...
+                    *
+                    method = annotation[':', 2, 1][',', 1, 1]
+                    crt method : ": " :
+                    obj->(method)()
+                    passes += 1
+                    crt "Passed!"
+                catch "AssertionError"
+                    fails += 1
+                    crt "Failed!"
+                    message = @EXCEPTION : ": " : @EXCEPTION.DATA
+                    crt message
+                catch SYS$ANY
+                    errors += 1
+                    crt "System Error!"
+                    message = @EXCEPTION : ": " : @EXCEPTION.DATA
+                    crt message
+                end
+            end
+        next annotation
+        crt passes : " Passes/" : fails : " Fails/" : errors : " Errors"
+    end
+
+end

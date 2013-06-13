@@ -1,0 +1,9 @@
+program test.qmerror
+
+    error = object("QMAssertionError", "My Error Message")
+    crt objinfo(error, 1)
+    crt objinfo(error, 2)
+    crt error->getMessage()
+    error->printStackTrace()
+
+end

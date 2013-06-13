@@ -1,0 +1,9 @@
+$debug
+$catalog assertFail global
+
+subroutine assertFail(message='') var.args
+
+    throw "AssertionError", message
+    return
+    
+end
