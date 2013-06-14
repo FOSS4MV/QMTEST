@@ -30,8 +30,7 @@ subroutine assertEqual(expected, actual, message='') var.args
     end
     
     local function format(expected, actual, message)
-        formatted = ''
-        if (message # '') then formatted = message : " expected: "
+        formatted = message : " expected: "
         if objinfo(expected, 0) then
             formatted := expected->toString()
         end else

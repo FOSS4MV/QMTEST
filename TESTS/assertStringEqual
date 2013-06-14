@@ -1,0 +1,7 @@
+$catalog assertStringEqual local
+*Test
+subroutine assertStringEqual()
+
+   call assertEqual("a", "a")
+   
+end

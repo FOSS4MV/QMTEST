@@ -1,0 +1,7 @@
+$catalog assertEqualNull local
+*Test
+subroutine assertEqualNull()
+
+   call assertEqual("", "")
+   
+end

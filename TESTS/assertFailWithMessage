@@ -1,13 +1,13 @@
 $catalog assertFailWithMessage local
-$* Test:assertFailWithMessage:subroutine
+*Test
 subroutine assertFailWithMessage()
 
     try
         call assertFail("woops!")
-    catch "AssertionError"
-        message = @EXCEPTION : ": " : @EXCEPTION.DATA
-        crt message
+    catch AssertionError
+        call assertEqual("woops!", @EXCEPTION.DATA)
+        return
     end
-    return
+    throw "AssertionError"
 
 end

@@ -1,0 +1,15 @@
+$catalog testFactorial local
+class testFactorial inherits QMTest
+    deffun factorial(value)
+    
+    *Test
+    public sub shouldReturnCorrectFactorialValue()
+        tests = "0,1ý1,1ý2,2ý3,6ý4,24ý10,3628800"
+        for each test in tests
+            value = test[',', 1, 1]
+            result = test[',', 2, 1]
+            call assertEqual(result, factorial(value))
+        next test
+    end
+
+end

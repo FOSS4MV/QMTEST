@@ -1,0 +1,5 @@
+$catalog factorial local
+function factorial(value)
+    deffun factorial(value)
+    return if (value < 2) then 1 else factorial(value - 1) * value
+end

@@ -1,16 +1,22 @@
 $catalog QMTest global
 class QMTest
 
-    shared private passes, failures, errors
-    private lPasses, lFailures, lErrors
+    shared private passes, failures, errors, ignores, skips
+    private lPasses, lFailures, lErrors, lIgnores, lSkips, ignore, skip
     
     public sub create.object()
         if unassigned(passes) then passes = 0
         if unassigned(failures) then failures = 0
         if unassigned(errors) then errors = 0
+        if unassigned(ignores) then ignores = 0
+        if unassigned(skips) then skips = 0
         lPasses = 0
         lFailures = 0
         lErrors = 0
+        lIgnores = 0
+        lSkips = 0
+        ignore = @false
+        skip = @false
     end
     
     public sub run(className, obj)
@@ -34,11 +40,10 @@ class QMTest
             * variable to be run before each test is run.
             *
             beforeMethod = ''
-            bpos = index(annotations, "@Before", 1)
+            bpos = index(annotations, "@Before:", 1)
             if (bpos > 0) then
                 banno = annotations[bpos, *]<1,1>
                 beforeMethod = banno[':', 2, 1]
-                obj->(method)()
             end  
 
             *
@@ -46,11 +51,11 @@ class QMTest
             * variable to be run after each test is run.
             *   
             afterMethod = ''         
-            apos = index(annotations, "@After", 1)
+            apos = index(annotations, "@After:", 1)
             if (apos > 0) then
                 aanno = annotations[apos, *]<1,1>
                 afterMethod = aanno[':', 2, 1]
-                obj->(method)()
+                crt afterMethod
             end
                               
             *
@@ -63,27 +68,38 @@ class QMTest
             * end the run of this test class.
             * 
             for each annotation in annotations
-                if (annotation[1,6] = "@Test:") then
-                    
-                    if (beforeMethod) then obj->beforeMethod()
-                    
-                    method = annotation[':', 2, 1]
-                    crt className : ":" : method : " -> " :
-                    
-                    try
-                        obj->(method)()
-                        lPasses += 1
-                        crt "Passed!"
-                        
-                    catch AssertionError
-                        lFailures += 1
-                        crt "Failed! (" : @EXCEPTION : ")"
-                        
-                    end
-                    
-                    if (afterMethod) then obj->afterMethod()
-                    
-                end
+                begin case
+                    case (annotation[1,6] = "@Test:")
+                        method = annotation[':', 2, 1]
+                        crt className : ":" : method : " -> " :
+                        if (ignore) then
+                            ignore = @false
+                            lIgnores += 1
+                            crt "Ignored!"
+                            continue
+                        end
+                        if (skip) then
+                            skip = @false
+                            lSkips += 1
+                            crt "Skipped!"
+                            continue
+                        end
+                        if (beforeMethod # '') then obj->(beforeMethod)()
+                        try
+                            obj->(method)()
+                            lPasses += 1
+                            crt "Passed!"
+                            if (afterMethod # '') then obj->(afterMethod)()
+                        catch AssertionError
+                            lFailures += 1
+                            crt "Failed!"
+                            crt @EXCEPTION : " -> " : @EXCEPTION.DATA
+                        end
+                    case (annotation[1,7] = "@Ignore")
+                        ignore = @true
+                    case (annotation[1,5] = "@Skip")
+                        skip = @true
+                end case
             next annotation
             
             *
@@ -106,11 +122,15 @@ class QMTest
         crt className : ": " :
         crt lPasses : " passes/ " :
         crt lFailures : " failures/ " :
-        crt lErrors : " errors"
+        crt lErrors : " errors/ " :
+        crt lIgnores : " ignored/ " :
+        crt lSkips : " skipped"
         crt
         passes += lPasses
         failures += lFailures
         errors += lErrors
+        ignores += lIgnores
+        skips += lSkips
     end
     
     public sub runSub(subName)
@@ -119,6 +139,8 @@ class QMTest
             crt subName : ": " :
             call !findprog(result, subName)
             annotation = result<4>
+            if (annotation<1,1> = "@Ignore") then throw "Ignore"
+            if (annotation<1,1> = "@Skip") then throw "Skip"
             *
             * @Test:subName:sub/func:param1,param2,...:expected
             *
@@ -171,9 +193,20 @@ class QMTest
             lPasses += 1
             crt "Passed!"
         
+        catch Ignore
+            callName = annotation<1,2>[':', 2, 1]
+            lIgnores += 1
+            crt "Ignored!"
+            
+        catch Skip
+            callName = annotation<1,2>[':', 2, 1]
+            lSkips += 1
+            crt "Skipped!"
+        
         catch AssertionError
             lFailures += 1
-            crt "Failed! (": @EXCEPTION : ")"
+            crt "Failed!"
+            crt @EXCEPTION : " -> " : @EXCEPTION.DATA
         
         catch SYS$ANY
             lErrors += 1
@@ -184,11 +217,15 @@ class QMTest
         crt callName : ": " :
         crt lPasses : " passes/ " :
         crt lFailures : " failures/ " :
-        crt lErrors : " errors"
+        crt lErrors : " errors/ " :
+        crt lIgnores : " ignored/ " :
+        crt lSkips : " skipped"
         crt
         passes += lPasses
         failures += lFailures
         errors += lErrors
+        ignores += lIgnores
+        skips += lSkips
     end
     
     get getPasses()
@@ -201,6 +238,14 @@ class QMTest
     
     get getErrors()
         return errors
+    end
+    
+    get getIgnores()
+        return ignores
+    end
+    
+    get getSkips()
+        return skips
     end
 
 end

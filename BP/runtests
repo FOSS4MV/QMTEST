@@ -1,28 +1,40 @@
 $catalog runtests local
 program runtests
-    deffun findprog(name) calling "!FINDPROG"
     
     errors = 0
-    QMTest = object("QMTest")
-    
+
     className = @SENTENCE[' ', 2, 1]
     if (className = '') then
         if (@SELECTED) then
+            selecte to runlist
+            annolist = runlist
             loop
-                readnext className else exit
+                readnext className from annolist else exit
+                gosub annotate(className)
+            repeat
+            QMTest = object("QMTest")
+            loop
+                readnext className from runlist else exit
                 gosub runtest(className)
             repeat
         end
+    end else
+        gosub annotate(className)
+        QMTest = object("QMTest")
+        gosub runtest(className)
     end
-    crt 
     crt "All tests completed!"
     crt QMTest->getPasses() : " passes/ " : 
     crt QMTest->getFailures() : " failures/ " :
-    crt QMTest->getErrors()+errors : " errors"
+    crt QMTest->getErrors()+errors : " errors/ " :
+    crt QMTest->getIgnores() : " ignored/ " :
+    crt QMTest->getSkips() : " skipped"
+    crt
     stop
             
     local sub runtest(className)
         try
+            *gosub annotate(className)
             obj = object(className)
             obj->run(className, obj)
         catch SYS.PROGRAM.NOT_OBJECT
@@ -33,6 +45,33 @@ program runtests
             crt @EXCEPTION
             errors += 1
         end
+        return
+    end
+    
+    local sub annotate(className)
+        call !FINDPROG(result, className)
+        if (result = '') then throw "NotFound", className : " needs to be compiled or does not exist!"
+        classFile = result<2,1>
+        acctName = ''
+        fileName = ''
+        itemName = ''
+        loop
+            check = removef(classFile, @DS)
+        until (status())
+            begin case
+                case (acctName = '')
+                    if (check = @ACCOUNT) then acctName = check
+                case (fileName = '')
+                    fileName = check
+                case 1
+                    fileName := "," : check
+            end case
+        repeat
+        cc = dcount(fileName, ',')
+        itemName = fileName[',', cc, 1]
+        fileName = fileName[',', 1, cc - 1]
+        cmd = "AnnotateTests " : fileName : " " : itemName
+        execute cmd capturing output
         return
     end
     

@@ -1,0 +1,278 @@
+** Stolen from Ivar Conradi Osthus by Marshall Lucas as an example of how to use the QMTest framework
+**
+** 14 Jun 2013
+**
+TDD by example  Factorial
+Posted by ivarconr  January 26, 2012	 4 Comments
+Filed Under  java test, language java, test driven development	
+
+Test-driven development is a development style with a simple process:
+
+1. Write a failing test
+2. Write code that corrects the failing test
+3. Clean up your code
+> Go to 1.
+
+The goal of TDD is not writing the tests first, its a design process where you
+iterate over the design as you develop new code. Instead of doing a full 
+upfront design, you design little by little as you need more functionality.
+Writing test first is just a tool to force you to focus on a small part of the
+code, how that part should work and improve the design all the time.
+
+Generally doing TDD at-least guarantees tests and testability. It does not
+provide efficiency or quality in itself (I have not found any documented
+evidence of this). But it does provide some minimum level of quality and
+encourages the developers to think about the problem in a modualized way. It
+also makes sure that developers write tests. We all now that writing tests
+after committing the code is hard because of all those excuses: late friday
+night, pressure, the sprint is ending and we just need some other
+functionality done, etc.
+
+Another big benefit from TDD is that it also (help) eliminates the waste from
+created from developers implementing stuff that might be useful. No code can be
+written before a test-case requiring that functionality.
+
+You can find a full description of TDD on wikipedia.
+Benefits of TDD:
+
+    * TDD will make sure your code are testable and well tested. The high test-
+      coverage will form an excellent documentation of your code.
+
+    * automatically gives you testable code, by definition
+    * ensures high test coverage
+    * elimintaes waste from implementing stuff that might be useful som time.
+    * shorter feedback loop
+    * higher code confidentiality
+    * makes you focus on smaller parts of the problem
+    * forces you to think about the APIs before implementing code.
+    * helps with modularizing of the code
+    * will make it easier to refactor your code, because of the high test
+      coverage
+    * makes you iterate and improve the design throughout the whole development
+      process
+    * high test-coverage provides excellent documentation of your code
+
+Shortcomings of TDD
+
+    * A higher number of tests can not guarantee higher code quality, it can only
+      provide you with a minimum level of quality of the resulting product.
+
+    * can be time-consuming, especially in the beginning
+    * can be hard, especially dealing with frameworks which put constraints on
+      your code
+    * done wrong: can make it hard to change the code. This is because there is
+      so many tests everywhere that verify every little part of your code all
+      the time
+    * can be hard to prove that it actually are more cost effective, especially
+      in the beginning
+    * Can make you less productive, especially if you follow a very strict TDD-
+      model where you only do the smallest change possible to satisfy a failing
+      test. I often feel that I would be able to solve larger part of problem
+      at once when i do TDD.
+
+TDD in action
+
+Now, after providing some background, lets start doing TDD, iteration for
+iteration. I will show you all the steps required.
+
+Problem description
+
+The task is to implement an factorial method as a QMBASIC function. The
+definition of factorial is:
+
+Examples:
+
+0! = 1
+1! = 1
+2! = 2 x 1 = 2
+3! = 3 x 2 x 1 = 6
+
+Iteration 1
+
+Lets start simple 0! should be 1.
+Write test
+
+We write our first test-method:
+$catalog testFactorial local
+class testFactorial inherits QMTest
+    *Test
+    public sub shouldReturnOneWhenZeroIn()
+        call assertEqual(1, factorial(0))
+    end
+end
+
+As we write this test we will get an compilation error complaining about the
+missing factorial method. Add a "deffun factorial(value)" statement directly
+below the class statement.  Now it should compile.
+
+Now execute "runtests testFactorial" to see what happens.  We get a nasty
+error about the non-exsitence of the factorial function.  So let's write 
+that funciton.
+
+$catalog factorial local
+function factorial(value)
+    return 0
+end
+
+Compile the new function, run the test again:
+
+Now we get a message from the framework:
+
+ASSERTIONERROR -> expected: <1> but was: <0>
+
+Fix the failing test
+
+Lets just fix it:
+
+$catalog factorial local
+function factorial(value)
+    return 1
+end
+
+Compile the function, run the test:
+
+Hurray our test is now passed!
+Clean up code
+
+I dont see any reason to clean up the code yet. Its simple and it solves the
+test case.
+
+Iteration 2
+
+Ok lets expand 1! should also be 1.
+Write test
+
+We write our second test-method in the testFactorial class:
+	
+*Test
+public sub shouldReturnOneWhenOneIn()
+    call assertEquals(1, factorial(1))
+end
+
+Wait, the test passed? I guess our previous implementation already covers this
+case, lets just head to next test case.
+
+Iteration 3
+
+Ok, in this iteration we want to make sure that 2! should be 2.
+
+Write test
+
+*Test
+public sub shouldReturnTwo() 
+    call assertEquals(2, factorial(2))
+end
+
+Fix the failing test
+$catalog factorial local
+function factorial(value)
+    if (value < 2) then return 1 else return 2
+end
+
+Hurray, our tests pass again.
+
+Clean up code
+
+I clean up the code by adding a bit of style and clarity to the formatting.
+$catalog factorial local	
+function factorial(value)
+    return if (value < 2) then 1 else 2
+end
+
+Iteration 4
+
+In this iteration we want to make sure that 3! equals 6.
+
+Write test
+*Test
+public sub shouldReturnSix() 
+    call assertEquals(6, factorial(3))
+end
+
+Executes and verifies that the test is failing.
+
+Fix the failing test
+$catalog factorial local
+function factorial(value)
+    if (value < 2) then return 1
+ 
+    if (value = 2) then
+        return 1*i
+    end else
+        return 1*2*i
+    end
+end
+
+Hmm.. do we start to see a pattern?
+
+Clean up code
+
+No clean ups this time, I am happy with the code as it is.
+
+Iteration 5
+Write test
+*Test
+public sub shouldReturnTwentyFour()
+    call assertEquals(24, factorial(4))
+end
+
+Fix the failing test
+
+We started to see a pattern in last iteration. Lets try to do a recursive
+function where we multiply i with factorial(n-1).
+
+$catalog factorial local	
+function factorial(value)
+    deffun factorial(value) 
+    if (i < 2) then return 1
+  
+    return factorial(value-1)*i
+end
+
+Hurray, it worked.
+
+Iteration 5
+
+From my manual calculator I find that 10! = 3628800. Lets do a test for it
+Write test
+*Test
+public sub shouldFindCorrectFactorialFor10()
+    call assertEquals(3628800, factorial(10))
+end
+
+Yes, my code returns correctly.
+
+Clean up test-code
+
+Our test-cases are also duplicated code. We can clean this duplication by using
+a multidimensional array to represent each input/output values.  Delete all the
+previous tests from the testFactorial class and add this one:
+
+*Test
+public sub shouldReturnCorrectFactorialValue()
+    tests = "0,1]1,1]2,2]3,6]4,24]10,3628800"
+    for each test in tests
+        value = test[',', 1, 1]
+        result = test[',', 2, 1]
+        assertEquals(result, factorial(value))
+    next test
+end
+
+For me this feels natural. I do this to avoid having multiple of testMethods
+for every input value we are testing.
+
+Summary
+
+As you saw, we quickly found the recursive solution of this problem. Because
+the factorial operation is a well known problem, I would probably head straight
+to a similar solution without a test-first approach.
+
+The point of this example is just to show the process and how it is performed.
+The benefits is generally more "visible" when the task faced is larger and more
+complex, where it is harder to see all the challenges required to solve upfront.
+
+TDD gives us tested code, with shorter feedback loop, higher code
+confidentiality and hope of code quality and improved design. At least the
+developers have been forced to implement with speration of concerns in mind.
+More tests does not provide quality in itself and it all comes back to highly
+skilled developers.

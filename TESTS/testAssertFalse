@@ -1,0 +1,13 @@
+$catalog testAssertFalse local
+*Test
+subroutine testAssertFalse()
+
+    call assertFalse(@false)
+    try
+        call assertFalse(@true)
+    catch AssertionError
+        return
+    end
+    call assertFail()
+   
+end

@@ -1,0 +1,43 @@
+$catalog testAnnotations local
+class testAnnotations inherits QMTest
+
+    *BeforeClass
+    public sub doThisOnlyOnceAtTheBeginning()
+        crt "@BeforeClass"
+    end
+    
+    *AfterClass
+    public sub doThisOnlyOnceAtTheEnd()
+        crt "@AfterClass"
+    end
+    
+    *Before
+    public sub doThisBeforeEachTest()
+        crt "@Before"
+    end
+    
+    *After
+    public sub doThisAfterEachTest()
+        crt "@After"
+    end
+    
+    *Test
+    public sub test1()
+        crt "test1!"
+    end
+    
+    *Test
+    public sub test2()
+        me->test2out()
+    end
+    
+    public sub test2out()
+        crt "test2"
+    end
+    
+    *Test
+    public sub test3()
+        crt "test3"
+    end
+
+end
