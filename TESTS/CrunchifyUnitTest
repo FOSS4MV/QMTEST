@@ -1,38 +1,35 @@
 $catalog CrunchifyUnitTest local
-$* @TestClass:CrunchifyUnitTest
-class CrunchifyUnitTest
 
-    $* @TestMethod:CrunchifyAddition,5,public,sub
+class CrunchifyUnitTest inherits QMTest
+
+    $* @Test:CrunchifyAddition
     public sub CrunchifyAddition()
         call assertEqual(31, me->addition(27, 3))
     end
-    
-    $* @TestMethod:CrunchifyDivisionByZero,10,public,sub
-    public sub CrunchifyDivisionByZero()
-        call assertEqual(3, me->division(9, 0))
-    end
-    
-    $* @TestMethod:NoSuchMethod,15,public,sub
-    public sub NoSuchMethod()
-        call assertEqual(9, me->multiplication(3, 3))
-    end
-    
-    $* @TestMethod:HelloWorld,20,public,sub
+
+    $* @Test:HelloWorld
     public sub HelloWorld()
         call assertEqual("Hello World", me->helloWorld())
     end
     
-    $* @Method:addition,29,public,function,x|y
+    $* @Test:CrunchifyDivisionByZero
+    public sub CrunchifyDivisionByZero()
+        call assertEqual(3, me->division(9, 0))
+    end
+    
+    $* @Test:NoSuchMethod
+    public sub NoSuchMethod()
+        call assertEqual(9, me->multiplication(3, 3))
+    end
+    
     public function addition(x, y)
         return (x + y)
     end
     
-    $* @Method:division,34,public,function,x|y
     public function division(x, y)
         return (x / y)
     end
     
-    $* @Method:helloWord,39,public,function
     public function helloWorld()
         helloWorld = "Hello " : "World"
         return helloWorld

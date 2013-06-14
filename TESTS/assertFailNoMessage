@@ -1,5 +1,5 @@
 $catalog assertFailNoMessage local
-
+$* Test:assertFailNoMessage:subroutine
 subroutine assertFailNoMessage()
 
     try

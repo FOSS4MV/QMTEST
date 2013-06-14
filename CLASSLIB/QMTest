@@ -1,23 +1,206 @@
 $catalog QMTest global
-**
-* A <em>Test</em> can be run and collect its results.
-*
-* @see QMTestResult
-**
 class QMTest
 
-    **
-    * Counts the number of test cases that will be run by this test.
-    **
-    public function countTestCases()
-        throw "NotImplemented", "countTestCases() method"
+    shared private passes, failures, errors
+    private lPasses, lFailures, lErrors
+    
+    public sub create.object()
+        if unassigned(passes) then passes = 0
+        if unassigned(failures) then failures = 0
+        if unassigned(errors) then errors = 0
+        lPasses = 0
+        lFailures = 0
+        lErrors = 0
     end
     
-    **
-    * Runs a test and collects its results in a QMTestResult instance
-    **    
-    public sub run(result)
-        throw "NotImplemented", "run(result) method"
+    public sub run(className, obj)
+        try
+            call !findprog(result, className)
+            annotations = result<4>
+            
+            *
+            * Check for @BeforeClass annotation and run once before
+            * all the test methods are run.
+            *
+            bcpos = index(annotations, "@BeforeClass", 1)
+            if (bcpos > 0) then
+                bcanno = annotations[bcpos, *]<1,1>
+                method = bcanno[':', 2, 1]
+                obj->(method)()
+            end
+
+            *
+            * Check for @Before annotation and setup the beforeMethod
+            * variable to be run before each test is run.
+            *
+            beforeMethod = ''
+            bpos = index(annotations, "@Before", 1)
+            if (bpos > 0) then
+                banno = annotations[bpos, *]<1,1>
+                beforeMethod = banno[':', 2, 1]
+                obj->(method)()
+            end  
+
+            *
+            * Check for @After annotation and setup the afterMethod
+            * variable to be run after each test is run.
+            *   
+            afterMethod = ''         
+            apos = index(annotations, "@After", 1)
+            if (apos > 0) then
+                aanno = annotations[apos, *]<1,1>
+                afterMethod = aanno[':', 2, 1]
+                obj->(method)()
+            end
+                              
+            *
+            * Loop through the annotations looking for @Test
+            * annotations, run the beforeMethod (if one defined),
+            * run the test method, the run the afterMethod (if one
+            * defined).  Wrap the test method itself in a try/
+            * catch block to catch assertions that fail.  Allow all
+            * non-assertion errors to be logged as errors and 
+            * end the run of this test class.
+            * 
+            for each annotation in annotations
+                if (annotation[1,6] = "@Test:") then
+                    
+                    if (beforeMethod) then obj->beforeMethod()
+                    
+                    method = annotation[':', 2, 1]
+                    crt className : ":" : method : " -> " :
+                    
+                    try
+                        obj->(method)()
+                        lPasses += 1
+                        crt "Passed!"
+                        
+                    catch AssertionError
+                        lFailures += 1
+                        crt "Failed! (" : @EXCEPTION : ")"
+                        
+                    end
+                    
+                    if (afterMethod) then obj->afterMethod()
+                    
+                end
+            next annotation
+            
+            *
+            * Check for @AfterClass annotation and run once after
+            * all tests have completed.
+            *
+            acpos = index(annotations, "@AfterClass", 1)
+            if (acpos > 0) then
+                acanno = annotations[acpos, *]<1,1>
+                method = acanno[':', 2, 1]
+                obj->(method)()
+            end
+            
+        catch SYS$ANY
+            lErrors += 1
+            crt "Error! (" : @EXCEPTION : ")"
+            crt @EXCEPTION.DATA
+            
+        end
+        crt className : ": " :
+        crt lPasses : " passes/ " :
+        crt lFailures : " failures/ " :
+        crt lErrors : " errors"
+        crt
+        passes += lPasses
+        failures += lFailures
+        errors += lErrors
+    end
+    
+    public sub runSub(subName)
+        
+        try
+            crt subName : ": " :
+            call !findprog(result, subName)
+            annotation = result<4>
+            *
+            * @Test:subName:sub/func:param1,param2,...:expected
+            *
+            * subName is the name of the subroutine/function as cataloged
+            * sub/func is the type of call (subroutine or function)
+            * param1... are the actual test parameter values to be used
+            * expected is the result return if type if func[tion]
+            *
+            callName = annotation[':', 2, 1]
+            callType = annotation[':', 3, 1]
+            callParams = annotation[':', 4, 1]
+            expected = annotation[':', 5, 1]
+            paramCount = dcount(callParams, ',')
+            params = ''
+            for p = 1 to paramCount
+                params<p> = callParams[',', p, 1]
+            next p
+            if (callType[1,3] = "sub") then
+                begin case
+                    CASE (paramCount = 0)
+                        call @callName
+                    case (paramCount = 1)
+                        call @callName(params<1>)
+                    case (paramCount = 2)
+                        call @callName(params<1>, params<2>)
+                    case (paramCount = 3)
+                        call @callName(params<1>, params<2>, params<3>)
+                    case (paramCount = 4)
+                        call @callName(params<1>, params<2>, params<3>, params<4>)
+                    case (paramCount = 5)
+                        call @callName(params<1>, params<2>, params<3>, params<4>, params<5>)
+                end case
+            end else
+                begin case
+                    case (paramCount = 0)
+                        call @callName(retval)
+                    case (paramCount = 1)
+                        call @callName(retval, params<1>)
+                    case (paramCount = 2)
+                        call @callName(retval, params<1>, params<2>)
+                    case (paramCount = 3)
+                        call @callName(retval, params<1>, params<2>, params<3>)
+                    case (paramCount = 4)
+                        call @callName(retval, params<1>, params<2>, params<3>, params<4>)
+                    case (paramCount = 5)
+                        call @callName(retval, params<1>, params<2>, params<3>, params<4>, params<5>)
+                end case
+                call assertEqual(expected, retval)
+            end
+            lPasses += 1
+            crt "Passed!"
+        
+        catch AssertionError
+            lFailures += 1
+            crt "Failed! (": @EXCEPTION : ")"
+        
+        catch SYS$ANY
+            lErrors += 1
+            crt "Error! (" : @EXCEPTION : ")"
+            crt @EXCEPTION.DATA
+             
+        end
+        crt callName : ": " :
+        crt lPasses : " passes/ " :
+        crt lFailures : " failures/ " :
+        crt lErrors : " errors"
+        crt
+        passes += lPasses
+        failures += lFailures
+        errors += lErrors
+    end
+    
+    get getPasses()
+        return passes
+    end
+    
+    get getFailures()
+        return failures
+    end
+    
+    get getErrors()
+        return errors
     end
 
 end

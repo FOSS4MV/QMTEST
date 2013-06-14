@@ -1,10 +1,18 @@
-$catalog QMObject global
+$catalog QMObject local
 class QMObject
 
     private guid
     
     public sub create.object()
         guid = system(1047)
+        callStack = system(1002)
+        depth = count(callStack, @fm)
+        for d = 2 to depth
+            className = callStack<d,1>
+            call !findprog(result, className)
+            annotations = result<4>
+            crt annotations
+        next d
     end
     
     public function getGUID()

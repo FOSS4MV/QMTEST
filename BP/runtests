@@ -1,6 +1,40 @@
+$catalog runtests local
 program runtests
-
-    call assertFailNoMessage()
-    call assertFailWithMessage()
-
+    deffun findprog(name) calling "!FINDPROG"
+    
+    errors = 0
+    QMTest = object("QMTest")
+    
+    className = @SENTENCE[' ', 2, 1]
+    if (className = '') then
+        if (@SELECTED) then
+            loop
+                readnext className else exit
+                gosub runtest(className)
+            repeat
+        end
+    end
+    crt 
+    crt "All tests completed!"
+    crt QMTest->getPasses() : " passes/ " : 
+    crt QMTest->getFailures() : " failures/ " :
+    crt QMTest->getErrors()+errors : " errors"
+    stop
+            
+    local sub runtest(className)
+        try
+            obj = object(className)
+            obj->run(className, obj)
+        catch SYS.PROGRAM.NOT_OBJECT
+            runner = object("QMTest")
+            runner->runSub(className)
+        catch SYS$ANY
+            crt className : ": " :
+            crt @EXCEPTION
+            errors += 1
+        end
+        return
+    end
+    
+    
 end
