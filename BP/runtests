@@ -41,8 +41,8 @@ program runtests
             runner = object("QMTest")
             runner->runSub(className)
         catch SYS$ANY
-            crt className : ": " :
-            crt @EXCEPTION
+            crt className : ": " : @EXCEPTION
+            if assigned(@EXCEPTION.DATA) then crt @EXCEPTION.DATA
             errors += 1
         end
         return

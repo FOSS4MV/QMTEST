@@ -31,7 +31,7 @@ program AnnotateTests
                 method = line2[' ', 3, 1]['(', 1, 1]
                 line = spcs : "$* @" : anno : ':' : method
                 source<l> = line
-            case (utline matches "'*IGNORE'0Xý'*SKIP'0X")
+            case (utline matches "'*IGNORE'0Xý'*SKIP'0Xý'*EXPECTED'0X")
                 spcs = line['*', 1, 1]
                 anno = line['*', 2, *]
                 line = spcs : "$* @" : anno

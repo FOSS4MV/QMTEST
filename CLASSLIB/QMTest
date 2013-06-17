@@ -3,6 +3,7 @@ class QMTest
 
     shared private passes, failures, errors, ignores, skips
     private lPasses, lFailures, lErrors, lIgnores, lSkips, ignore, skip
+    private beforeClass, afterClass, beforeMethod, afterMethod, tests, ignored, skipped, exceptions
     
     public sub create.object()
         if unassigned(passes) then passes = 0
@@ -15,108 +16,88 @@ class QMTest
         lErrors = 0
         lIgnores = 0
         lSkips = 0
-        ignore = @false
-        skip = @false
+        beforeClass = ''
+        afterClass = ''
+        beforeMethod = ''
+        afterMethod = ''
+        tests = ''
+        ignored = ''
+        skipped = ''
+        exceptions = ''
     end
     
     public sub run(className, obj)
         try
-            call !findprog(result, className)
-            annotations = result<4>
+            me->parseAnnotations(className)
             
             *
             * Check for @BeforeClass annotation and run once before
             * all the test methods are run.
             *
-            bcpos = index(annotations, "@BeforeClass", 1)
-            if (bcpos > 0) then
-                bcanno = annotations[bcpos, *]<1,1>
-                method = bcanno[':', 2, 1]
-                obj->(method)()
-            end
-
-            *
-            * Check for @Before annotation and setup the beforeMethod
-            * variable to be run before each test is run.
-            *
-            beforeMethod = ''
-            bpos = index(annotations, "@Before:", 1)
-            if (bpos > 0) then
-                banno = annotations[bpos, *]<1,1>
-                beforeMethod = banno[':', 2, 1]
-            end  
-
-            *
-            * Check for @After annotation and setup the afterMethod
-            * variable to be run after each test is run.
-            *   
-            afterMethod = ''         
-            apos = index(annotations, "@After:", 1)
-            if (apos > 0) then
-                aanno = annotations[apos, *]<1,1>
-                afterMethod = aanno[':', 2, 1]
-                crt afterMethod
-            end
+            if (beforeClass # '') then obj->(beforeClass)()
                               
             *
-            * Loop through the annotations looking for @Test
-            * annotations, run the beforeMethod (if one defined),
-            * run the test method, the run the afterMethod (if one
-            * defined).  Wrap the test method itself in a try/
-            * catch block to catch assertions that fail.  Allow all
-            * non-assertion errors to be logged as errors and 
-            * end the run of this test class.
+            * Loop through the tests, run the before method (if one defined),
+            * run the test method, the run the after method (if one defined).
+            * Wrap the test method itself in a try/catch block to catch 
+            * assertions that fail.  Allow all non-assertion errors to be
+            * logged as errors and end the run of this test class.
             * 
-            for each annotation in annotations
-                begin case
-                    case (annotation[1,6] = "@Test:")
-                        method = annotation[':', 2, 1]
-                        crt className : ":" : method : " -> " :
-                        if (ignore) then
-                            ignore = @false
-                            lIgnores += 1
-                            crt "Ignored!"
-                            continue
-                        end
-                        if (skip) then
-                            skip = @false
-                            lSkips += 1
-                            crt "Skipped!"
-                            continue
-                        end
-                        if (beforeMethod # '') then obj->(beforeMethod)()
-                        try
-                            obj->(method)()
-                            lPasses += 1
-                            crt "Passed!"
+            testCount = 0
+            for each test in tests
+                testCount += 1
+                method = test[':', 1, 1]
+                crt className : ":" : method : " -> " :
+                ignore = ignored<testCount>
+                skip = skipped<testCount>
+                exception = exceptions<testCount>
+                if (ignore) then
+                    lIgnores += 1
+                    crt "Ignored!"
+                    continue
+                end
+                if (skip) then
+                    lSkips += 1
+                    crt "Skipped!"
+                    continue
+                end
+                try
+                    if (beforeMethod # '') then obj->(beforeMethod)()
+                    obj->(method)()
+                    if (afterMethod # '') then obj->(afterMethod)()
+                    lPasses += 1
+                    crt "Passed!"
+                catch AssertionError
+                    lFailures += 1
+                    crt "Failed!"
+                    crt @EXCEPTION : " -> " : @EXCEPTION.DATA
+                catch SYS$ANY
+                    if (exception # '') then
+                        if (@EXCEPTION = upcase(exception)) then
                             if (afterMethod # '') then obj->(afterMethod)()
-                        catch AssertionError
-                            lFailures += 1
-                            crt "Failed!"
-                            crt @EXCEPTION : " -> " : @EXCEPTION.DATA
+                            lPasses += 1
+                            crt "Passed! Exception=" : exception : " expected!"
+                            continue
                         end
-                    case (annotation[1,7] = "@Ignore")
-                        ignore = @true
-                    case (annotation[1,5] = "@Skip")
-                        skip = @true
-                end case
-            next annotation
+                    end
+                    if assigned(@EXCEPTION.DATA) then
+                        throw @EXCEPTION, @EXCEPTION.DATA
+                    end else
+                        throw @EXCEPTION
+                    end
+                end
+            next test
             
             *
             * Check for @AfterClass annotation and run once after
             * all tests have completed.
             *
-            acpos = index(annotations, "@AfterClass", 1)
-            if (acpos > 0) then
-                acanno = annotations[acpos, *]<1,1>
-                method = acanno[':', 2, 1]
-                obj->(method)()
-            end
+            if (afterClass # '') then obj->(afterClass)()
             
         catch SYS$ANY
             lErrors += 1
             crt "Error! (" : @EXCEPTION : ")"
-            crt @EXCEPTION.DATA
+            if assigned(@EXCEPTION.DATA) then crt @EXCEPTION.DATA
             
         end
         crt className : ": " :
@@ -137,10 +118,10 @@ class QMTest
         
         try
             crt subName : ": " :
-            call !findprog(result, subName)
-            annotation = result<4>
-            if (annotation<1,1> = "@Ignore") then throw "Ignore"
-            if (annotation<1,1> = "@Skip") then throw "Skip"
+            me->parseAnnotations(subName)
+            test = tests<1>
+            if (ignores<1>) then throw "Ignore"
+            if (skips<1>) then throw "Skip"
             *
             * @Test:subName:sub/func:param1,param2,...:expected
             *
@@ -149,10 +130,10 @@ class QMTest
             * param1... are the actual test parameter values to be used
             * expected is the result return if type if func[tion]
             *
-            callName = annotation[':', 2, 1]
-            callType = annotation[':', 3, 1]
-            callParams = annotation[':', 4, 1]
-            expected = annotation[':', 5, 1]
+            callName = test[':', 1, 1]
+            callType = test[':', 2, 1]
+            callParams = test[':', 3, 1]
+            expected = test[':', 4, 1]
             paramCount = dcount(callParams, ',')
             params = ''
             for p = 1 to paramCount
@@ -194,12 +175,12 @@ class QMTest
             crt "Passed!"
         
         catch Ignore
-            callName = annotation<1,2>[':', 2, 1]
+            callName = test[':', 2, 1]
             lIgnores += 1
             crt "Ignored!"
             
         catch Skip
-            callName = annotation<1,2>[':', 2, 1]
+            callName = test[':', 2, 1]
             lSkips += 1
             crt "Skipped!"
         
@@ -212,7 +193,7 @@ class QMTest
             lErrors += 1
             crt "Error! (" : @EXCEPTION : ")"
             crt @EXCEPTION.DATA
-             
+            
         end
         crt callName : ": " :
         crt lPasses : " passes/ " :
@@ -226,6 +207,40 @@ class QMTest
         errors += lErrors
         ignores += lIgnores
         skips += lSkips
+    end
+    
+    public sub parseAnnotations(className)
+        call !findprog(result, className)
+        annotations = result<4>
+        ignoreNext = @false
+        skipNext = @false
+        testCount = 0
+        for each annotation in annotations
+            uAnnotation = upcase(annotation)
+            begin case
+                case (uAnnotation matches "0X'@BEFORECLASS'0X")
+                    beforeClass = annotation[':', 2, 1] 
+                case (uAnnotation matches "0X'@AFTERCLASS'0X")
+                    afterClass = annotation[':', 2, 1]
+                case (uAnnotation matches "0X'@BEFORE'0X")
+                    beforeMethod = annotation[':', 2, 1]
+                case (uAnnotation matches "0X'@AFTER'0X")
+                    afterMethod = annotation[':', 2, 1]
+                case (uAnnotation matches "0X'@EXPECTEDEXCEPTION'0X")
+                    exceptions = insert(exceptions, testCount+1; annotation['=', 2, 1])
+                case (uAnnotation matches "0X'@IGNORE'0X")
+                    ignoreNext = @true
+                case (uAnnotation matches "0X'@SKIP'0X")
+                    skipNext = @true
+                case (uAnnotation matches "0X'@TEST'0X")
+                    tests = insert(tests, testCount+1; annotation[':', 2, *])
+                    ignored = insert(ignored, testCount+1; ignoreNext)
+                    skipped = insert(skipped, testCount+1; skipNext)
+                    ignoreNext = @false
+                    skipNext = @false
+                    testCount += 1
+            end case
+        next annotation
     end
     
     get getPasses()

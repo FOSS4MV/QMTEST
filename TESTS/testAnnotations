@@ -26,6 +26,7 @@ class testAnnotations inherits QMTest
         crt "test1!"
     end
     
+    *Ignore
     *Test
     public sub test2()
         me->test2out()
@@ -35,9 +36,17 @@ class testAnnotations inherits QMTest
         crt "test2"
     end
     
+    *Skip
     *Test
     public sub test3()
         crt "test3"
+    end
+    
+    *ExpectedException=TestException
+    *Test
+    public sub test4()
+        crt "test4"
+        throw "TestException", "This best get consumed as it is expected to happen."
     end
 
 end
