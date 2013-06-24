@@ -1,0 +1,27 @@
+$catalog anno.Ignore global
+class anno.Ignore
+
+    public sub create.object()
+    end
+    
+    public sub parse(line1, line2)
+        line = line1 : " " : line2
+        uLine = upcase(line)
+        if (uLine matches "0X'{IGNORE}'0X") then
+            rest = matchField(line, "0X'{'0X'}'0X", 5)
+            uRest = upcase(rest)
+            found = @false
+            if (uRest matches "0X'{TEST}'0X") then found = @true
+            if not(found) then
+                throw "Annotation.Invalid.Target"
+            end
+        end else 
+            throw "Annotation.Invalid"
+        end
+    end
+    
+    public function toString()
+        return "$* {Ignore}"
+    end
+
+end

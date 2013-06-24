@@ -1,8 +1,9 @@
 $catalog testFactorial local
-class testFactorial inherits QMTest
+{TestCase}
+class testFactorial inherits QMTestCase
     deffun factorial(value)
     
-    *Test
+    {Test}
     public sub shouldReturnCorrectFactorialValue()
         tests = "0,1ý1,1ý2,2ý3,6ý4,24ý10,3628800"
         for each test in tests

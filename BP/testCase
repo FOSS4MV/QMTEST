@@ -1,0 +1,11 @@
+program testCase
+
+    error = 1
+    Error = 2
+    ERROR = 3
+    
+    crt error
+    crt Error
+    crt ERROR
+
+end

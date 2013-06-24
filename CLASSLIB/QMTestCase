@@ -1,53 +1,250 @@
 $catalog QMTestCase global
-class QMTestCase inherits QMTest
+class QMTestCase
 
-    private fName
-   
-    public sub create.object(name='') var.args
-        fName = name
+    shared private passes, failures, errors, ignores, skips
+    private lPasses, lFailures, lErrors, lIgnores, lSkips, ignore, skip
+    private beforeClass, afterClass, beforeMethod, afterMethod
+    private tests, ignored, skipped, exceptions
+    private assert
+    
+    public sub create.object()
+        if unassigned(passes) then passes = 0
+        if unassigned(failures) then failures = 0
+        if unassigned(errors) then errors = 0
+        if unassigned(ignores) then ignores = 0
+        if unassigned(skips) then skips = 0
+        lPasses = 0
+        lFailures = 0
+        lErrors = 0
+        lIgnores = 0
+        lSkips = 0
+        beforeClass = ''
+        afterClass = ''
+        beforeMethod = ''
+        afterMethod = ''
+        tests = ''
+        ignored = ''
+        skipped = ''
+        exceptions = ''
+        assert = object("QMAssert")
     end
     
-    public function countTestCases()
-        return 1
-    end
-    
-    public function createResult()
-        return object("QMTestResult")
-    end
-    
-    public subroutine run(result='', obj='') var.args
-        if not(objinfo(result)) then
-            result = me->createResult()
-        end
-        if not(objinfo(obj)) then
-            result->run(me)
-        end else
-            result->run(obj)
-        end
-    end
-    
-    public subroutine runBare()
-        exception = ''
-        me->setUp()
+    public sub run(className, obj)
         try
-            me->runTest()
-        catch "Running"
-            exception = "Running"
+            me->parseAnnotations(className)
+            
+            *
+            * Check for @BeforeClass annotation and run once before
+            * all the test methods are run.
+            *
+            if (beforeClass # '') then obj->(beforeClass)()
+                              
+            *
+            * Loop through the tests, run the before method (if one defined),
+            * run the test method, the run the after method (if one defined).
+            * Wrap the test method itself in a try/catch block to catch 
+            * assertions that fail.  Allow all non-assertion errors to be
+            * logged as errors and end the run of this test class.
+            * 
+            testCount = 0
+            for each test in tests
+                testCount += 1
+                method = test[':', 1, 1]
+                crt className : ":" : method : " -> " :
+                ignore = ignored<testCount>
+                skip = skipped<testCount>
+                exception = exceptions<testCount>
+                if (ignore) then
+                    lIgnores += 1
+                    crt "Ignored!"
+                    continue
+                end
+                if (skip) then
+                    lSkips += 1
+                    crt "Skipped!"
+                    continue
+                end
+                try
+                    if (beforeMethod # '') then obj->(beforeMethod)()
+                    obj->(method)()
+                    if (exception # '') then throw "ExpectedException", exception
+                    if (afterMethod # '') then obj->(afterMethod)()
+                    lPasses += 1
+                    crt "Passed!"
+                catch AssertionError
+                    if (@EXCEPTION = upcase(exception)) then
+                        if (afterMethod # '') then obj->(afterMethod)()
+                        lPasses += 1
+                        crt "Passed! Exception=" : exception : " expected!"
+                        continue
+                    end
+                    lFailures += 1
+                    crt "Failed!"
+                    crt @EXCEPTION : " -> " : @EXCEPTION.DATA
+                catch ExpectedException
+                    lFailures += 1
+                    crt "Failed! ExpectedException=" : @EXCEPTION.DATA
+                catch SYS$ANY
+                    if (exception # '') then
+                        if (@EXCEPTION = upcase(exception)) then
+                            if (afterMethod # '') then obj->(afterMethod)()
+                            lPasses += 1
+                            crt "Passed! Exception=" : exception : " expected!"
+                            continue
+                        end
+                    end
+                    if assigned(@EXCEPTION.DATA) then
+                        throw @EXCEPTION, @EXCEPTION.DATA
+                    end else
+                        throw @EXCEPTION
+                    end
+                end
+            next test
+            
+            *
+            * Check for @AfterClass annotation and run once after
+            * all tests have completed.
+            *
+            if (afterClass # '') then obj->(afterClass)()
+            
+        catch SYS$ANY
+            lErrors += 1
+            crt "Error! (" : @EXCEPTION : ")"
+            if assigned(@EXCEPTION.DATA) then crt @EXCEPTION.DATA
+            
         end
-        try
-            me->tearDown()
-        catch "TearingDown"
-            if (exception = '') then exception = "TearingDown"
-        end
-        if (exception <> '') then throw exception
+        crt className : ": " :
+        crt lPasses : " passes/ " :
+        crt lFailures : " failures/ " :
+        crt lErrors : " errors/ " :
+        crt lIgnores : " ignored/ " :
+        crt lSkips : " skipped"
+        crt
+        passes += lPasses
+        failures += lFailures
+        errors += lErrors
+        ignores += lIgnores
+        skips += lSkips
     end
     
-    public subroutine runTest()
-        call assertNotNull(fName, "QMTestCase->fName cannot be null")
-        runMethod = ''
+    public sub runSub(subName)
+        
         try
-            runMethod = 
-
+            me->parseAnnotations(subName)
+            callName = tests<1>
+            crt callName : " -> " :
+            if (ignores<1>) then throw "Ignore"
+            if (skips<1>) then throw "Skip"
+            call @callName
+            lPasses += 1
+            crt "Passed!"
+        
+        catch Ignore
+            lIgnores += 1
+            crt "Ignored!"
+            
+        catch Skip
+            lSkips += 1
+            crt "Skipped!"
+        
+        catch AssertionError
+            lFailures += 1
+            crt "Failed!"
+            crt @EXCEPTION : " -> " : @EXCEPTION.DATA
+        
+        catch SYS$ANY
+            lErrors += 1
+            crt "Error! (" : @EXCEPTION : ")"
+            crt @EXCEPTION.DATA
+            
+        end
+        crt callName : ": " :
+        crt lPasses : " passes/ " :
+        crt lFailures : " failures/ " :
+        crt lErrors : " errors/ " :
+        crt lIgnores : " ignored/ " :
+        crt lSkips : " skipped"
+        crt
+        passes += lPasses
+        failures += lFailures
+        errors += lErrors
+        ignores += lIgnores
+        skips += lSkips
+    end
+    
+    public sub parseAnnotations(className)
+        call !findprog(result, className)
+        annotations = result<4>
+        ignoreNext = @false
+        skipNext = @false
+        testCount = 1
+        for each annotation in annotations
+            parts = parse(annotation, \"{"0X"(name='"0X"')}"ý"{"0X"}"\, @fm)
+            annotation = parts<2>
+            method = parts<4>
+            uAnnotation = upcase(annotation)
+            begin case
+                case (uAnnotation = "BEFORECLASS")
+                    beforeClass = method
+                case (uAnnotation = "AFTERCLASS")
+                    afterClass = method
+                case (uAnnotation = "BEFORE")
+                    beforeMethod = method
+                case (uAnnotation = "AFTER")
+                    afterMethod = method
+                case (uAnnotation matches "'EXPECTEDEXCEPTION='0X")
+                    exceptions = insert(exceptions, testCount; annotation['=', 2, 1])
+                case (uAnnotation = "IGNORE")
+                    ignoreNext = @true
+                case (uAnnotation = "SKIP")
+                    skipNext = @true
+                case (uAnnotation = "TESTCASE")
+                    className = method
+                case (uAnnotation = "TEST")
+                    tests = insert(tests, testCount; method)
+                    ignored = insert(ignored, testCount; ignoreNext)
+                    skipped = insert(skipped, testCount; skipNext)
+                    ignoreNext = @false
+                    skipNext = @false
+                    testCount += 1
+            end case
+        next annotation
+    end
+    
+    public sub assertTrue(condition, message='') var.args
+        assert->True(condition, message)
+    end
+    
+    public sub assertFalse(condition, message='') var.args
+        assert->False(condition, message)
+    end
+    
+    public sub assertEquals(expected, actual, message='') var.args
+        assert->Equals(expected, actual, message)
+    end
+    
+    public sub assertNotEquals(unexpected, actual, message='') var.args
+        assert->NotEquals(unexpected, actual, message)
+    end
+    
+    get getPasses()
+        return passes
+    end
+    
+    get getFailures()
+        return failures
+    end
+    
+    get getErrors()
+        return errors
+    end
+    
+    get getIgnores()
+        return ignores
+    end
+    
+    get getSkips()
+        return skips
     end
 
 end

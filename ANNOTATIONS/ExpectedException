@@ -1,0 +1,32 @@
+$catalog anno.ExpectedException global
+class anno.ExpectedException
+
+    private exception
+
+    public sub create.object()
+        exception = ''
+    end
+    
+    public sub parse(line1, line2)
+        line = line1 : " " : line2
+        uLine = upcase(line)
+        if (uLine matches "0X'{EXPECTEDEXCEPTION'0X") then
+            rest = matchField(line, "0X'{'0X'}'0X", 5)
+            uRest = upcase(rest)
+            found = @false
+            if (uRest matches "0X'{TEST}'0X") then found = @true
+            if found then
+                exception = matchField(line, "0X'{'0X'='0X'}'0X", 5)
+            end else
+                throw "Annotation.Invalid.Target"
+            end
+        end else 
+            throw "Annotation.Invalid"
+        end
+    end
+    
+    public function toString()
+        return "$* {ExpectedException=" : exception : "}"
+    end
+
+end

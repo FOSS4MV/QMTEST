@@ -1,5 +1,5 @@
 $catalog assertFailWithMessage local
-*Test
+{Test}
 subroutine assertFailWithMessage()
 
     try

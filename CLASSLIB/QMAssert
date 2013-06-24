@@ -32,7 +32,7 @@ class QMAssert
     * @see QMAssertionError
     **
     public sub fail(message='') var.args
-        throw "QMAssertionError", message
+        throw "AssertionError", message
     end
     
     **

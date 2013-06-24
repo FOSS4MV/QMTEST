@@ -1,0 +1,44 @@
+$catalog anno.Before global
+class anno.Before
+
+    public name
+    
+    public sub create.object()
+        name = ''
+    end
+    
+    public sub parse(line1, line2)
+        line = line1 : " " : line2
+        uLine = upcase(line)
+        if (uLine matches "0X'{BEFORE}'0X") then
+            rest = matchField(line, "0X'{'0X'}'0X", 5)
+            uRest = upcase(rest)
+            found = @false
+            begin case
+                case (uRest matches "0X'SUBROUTINE '0X")
+                    found = "SUBROUTINE "
+                case (uRest matches "0X'SUB '0X")
+                    found = "SUB "
+                case (uRest matches "0X'SET '0X")
+                    found = "SET "
+                case (uRest matches "0X'FUNCTION '0X")
+                    found = "FUNCTION "
+                case (uRest matches "0X'GET '0X")
+                    found = "GET "
+            end case
+            if (found) then
+                pos = index(uRest, found, 1) + len(found)
+                name = rest[pos, *]['(', 1, 1]
+            end else
+                throw "Annotation.Invalid.Target"
+            end
+        end else 
+            throw "Annotation.Invalid"
+        end
+    end
+    
+    public function toString()
+        return "$* {Before(name='" : name : "')}"
+    end
+
+end

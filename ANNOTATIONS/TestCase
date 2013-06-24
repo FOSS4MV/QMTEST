@@ -1,0 +1,32 @@
+$catalog anno.TestCase global
+class anno.TestCase
+
+    public name
+    
+    public sub create.object()
+        name = ''
+    end
+    
+    public sub parse(line1, line2)
+        line = line1 : " " : line2
+        uLine = upcase(line)
+        if (uLine matches "0X'{TESTCASE}'0X") then
+            rest = matchField(line, "0X'{'0X'}'0X", 5)
+            uRest = upcase(rest)
+            if (uRest matches "0X'CLASS'0X") then
+                found = matchField(uRest, "0X'CLASS '0X' '0Xý0X'CLASS '0X", 3)
+                pos = index(uRest, found, 1)
+                name = rest[pos, len(found)]
+            end else
+                throw "Annotation.Invalid.Target"
+            end
+        end else 
+            throw "Annotation.Invalid"
+        end
+    end
+    
+    public function toString()
+        return "$* {TestCase(name='" : name : "')}"
+    end
+
+end

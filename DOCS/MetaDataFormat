@@ -1,0 +1,80 @@
+<TestCase name="testAnnotations">
+    <BeforeClass name="doThisOnlyOnceAtTheBeginning" />
+    <AfterClass name="doThisOnlyOnceAtTheEnd" />
+    <Before name="doThisBeforeEachTest" />
+    <After name="doThisAfterEachTest" />
+    <Tests>
+        <Test name="test1" />
+        <Test name="test2" ignore />
+        <Test name="test3" skip />
+        <Test name="test4" exception="TestException" />
+    </Tests>
+</TestCase>
+
+{TestCase(name='testAnnotations')}
+{BeforeClass(name='doThisOnlyOnceAtTheBeginning')}
+{AfterClass(name='doThisOnlyOnceAtTheEnd')}
+{Before(name='doThisBeforeEachTest')}
+{After(name='doThisAfterEachTest')}
+{Test(name='test1')}
+{Ignore}
+{Test(name='test2')}
+{Skip}
+{Test(name='test3')}
+{ExpectedException=TestException}
+{Test(name='test4')}
+
+{TestCase(name='testAnnotations')}
+{BeforeClass(name='doThisOnlyOnceAtTheBeginning')}
+{AfterClass(name='doThisOnlyOnceAtTheEnd')}
+{Before(name='doThisBeforeEachTest')}
+{After(name='doThisAfterEachTest')}
+{Test(name='test1')}
+{Test(name='test2',ignore=@true)}
+{Test(name='test3',skip=@true)}
+{Test(name='test4',expectedException="TestException")}
+
+TestCase]BeforeClass]AfterClass]Before]After]Test]Test]Test]Test
+name]name]name]name]name]name]name\ignore]name\skip]name\expectedException
+testAnnotation]doThisOnlyOnceAtTheBeginning]doThisOnlyOnceAtTheEnd]doThisBeforeEachTest]doThisAfterEachTest]test1]test2\@true]test3]@true]test4\TestException
+
+<File name="Person">
+    <Id name="uuid" />
+    <Fields>
+        <Field name="firstName" iconv="MCU" oconv="UPROPER" />
+        <Field name="lastName" iconv="MCU" oconv="UPROPER" />
+        <Field name="createDate" iconv="D" oconv="D4-" />
+    </Fields>
+</File>
+
+{File(name="Person")}
+{Id(name="uuid")}
+{Field(name="firstName",iconv="MCU",oconv="UPROPER")}
+{Field(name="lastName",iconv="MCU",oconv="UPROPER")}
+{Field(name="createDate",iconv="D",oconv="D4-")}
+
+File]Id]Field]Field]Field
+name]name]name\iconv\oconv]name\iconv\oconv]name\iconv\oconv
+Person]uuid]firstName\MCU\UPROPER]lastName\MCU\UPROPER]createDate\D\D4-
+
+{File(name="Person")}
+{Class(name="Person",inherits="QMFile",max.args="10",annotations="File")}
+{Id(name="uuid")}
+{Property(name="uuid",visibility="PRIVATE",annotations="Id")}
+{Field(name="firstName",iconv="MCU",oconv="UPROPER")}
+{Property(name="firstName",visibility="PRIVATE",annotations="Field")}
+{Field(name="lastName",iconv="MCU",oconv="UPROPER")}
+{Property(name="lastName",visibility="PRIVATE",annotations="Field")}
+{Field(name="createDate",iconv="D",oconv="D4-")}
+{Property(name="createDate",visibility="PRIVATE",annotations="Field")}
+{Method(name="getUUID",visibility="PUBLIC",type="FUNCTION")}
+{Method(name="setUUID",visibility="PUBLIC",type="SUBROUTINE",parameters="value")}
+{Method(name="getFirstName",visibility="PUBLIC",type="FUNCTION")}
+{Method(name="setFirstName",visibility="PUBLIC",type="SUBROUTINE",parameters="value")}
+{Method(name="getLastName",visibility="PUBLIC",type="FUNCTION")}
+{Method(name="setLastName",visibility="PUBLIC",type="SUBROUTINE",parameters="value")}
+{Method(name="getCreateDate",visibility="PUBLIC",type="FUNCTION")}
+{Deprecated(name="setCreateDate")}
+{Method(name="setCreateDate",visibility="PUBLIC",type="SUBROUTINE",parameters="value",annotations="Deprecated")}
+{Override(name="getFileName")}
+{Method(name="getFileName",visibility="PUBLIC",type="FUNCTION",annotations="Override")}

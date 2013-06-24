@@ -1,5 +1,5 @@
 $catalog assertStringEqual local
-*Test
+{Test}
 subroutine assertStringEqual()
 
    call assertEqual("a", "a")

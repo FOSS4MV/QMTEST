@@ -1,52 +1,61 @@
 $catalog testAnnotations local
-class testAnnotations inherits QMTest
+{TestCase}
+class testAnnotations inherits QMTestCase
 
-    *BeforeClass
+    private beforeClassCalled, afterClassCalled, beforeCalled, afterCalled
+    
+    public sub create.object()
+        beforeClassCalled = @false
+        afterClassCalled = @false
+        beforeCalled = 0
+        afterCalled = 0
+    end
+    
+    {BeforeClass}
     public sub doThisOnlyOnceAtTheBeginning()
-        crt "@BeforeClass"
+        me->assertFalse(beforeClassCalled)
+        beforeClassCalled = @true
     end
     
-    *AfterClass
+    {AfterClass}
     public sub doThisOnlyOnceAtTheEnd()
-        crt "@AfterClass"
+        me->assertFalse(afterClassCalled)
+        afterClassCalled = @true
     end
     
-    *Before
+    {Before}
     public sub doThisBeforeEachTest()
-        crt "@Before"
+        me->assertTrue(beforeCalled <= 4)
+        beforeCalled += 1
     end
     
-    *After
+    {After}
     public sub doThisAfterEachTest()
-        crt "@After"
+        me->assertTrue(afterCalled <= 4)
+        afterCalled += 1
     end
     
-    *Test
+    {Test}
     public sub test1()
-        crt "test1!"
+        me->assertTrue(beforeCalled=1 & afterCalled=0)
     end
     
-    *Ignore
-    *Test
+    {Ignore}
+    {Test}
     public sub test2()
-        me->test2out()
+        me->assertTrue(beforeCalled=2 & afterCalled=1)
     end
     
-    public sub test2out()
-        crt "test2"
-    end
-    
-    *Skip
-    *Test
+    {Skip}
+    {Test}
     public sub test3()
-        crt "test3"
+        me->assertTrue(beforeCalled=3 & afterCalled=2)
     end
     
-    *ExpectedException=TestException
-    *Test
+    {ExpectedException=AssertionError}
+    {Test}
     public sub test4()
-        crt "test4"
-        throw "TestException", "This best get consumed as it is expected to happen."
+        me->assertTrue(beforeCalled=2 & afterCalled=1)
     end
 
 end

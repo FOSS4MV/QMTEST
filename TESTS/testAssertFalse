@@ -1,5 +1,5 @@
 $catalog testAssertFalse local
-*Test
+{Test}
 subroutine testAssertFalse()
 
     call assertFalse(@false)

@@ -1,5 +1,5 @@
 $catalog assertEqualNull local
-*Test
+{Test}
 subroutine assertEqualNull()
 
    call assertEqual("", "")

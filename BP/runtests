@@ -7,38 +7,32 @@ program runtests
     if (className = '') then
         if (@SELECTED) then
             selecte to runlist
-            annolist = runlist
-            loop
-                readnext className from annolist else exit
-                gosub annotate(className)
-            repeat
-            QMTest = object("QMTest")
+            QMTestCase = object("QMTestCase")
             loop
                 readnext className from runlist else exit
                 gosub runtest(className)
             repeat
         end
     end else
-        gosub annotate(className)
-        QMTest = object("QMTest")
+        QMTestCase = object("QMTestCase")
         gosub runtest(className)
     end
     crt "All tests completed!"
-    crt QMTest->getPasses() : " passes/ " : 
-    crt QMTest->getFailures() : " failures/ " :
-    crt QMTest->getErrors()+errors : " errors/ " :
-    crt QMTest->getIgnores() : " ignored/ " :
-    crt QMTest->getSkips() : " skipped"
+    crt QMTestCase->getPasses() : " passes/ " : 
+    crt QMTestCase->getFailures() : " failures/ " :
+    crt QMTestCase->getErrors()+errors : " errors/ " :
+    crt QMTestCase->getIgnores() : " ignored/ " :
+    crt QMTestCase->getSkips() : " skipped"
     crt
     stop
             
     local sub runtest(className)
+        call assertNotNull(className)
         try
-            *gosub annotate(className)
             obj = object(className)
             obj->run(className, obj)
         catch SYS.PROGRAM.NOT_OBJECT
-            runner = object("QMTest")
+            runner = object("QMTestCase")
             runner->runSub(className)
         catch SYS$ANY
             crt className : ": " : @EXCEPTION
@@ -47,33 +41,5 @@ program runtests
         end
         return
     end
-    
-    local sub annotate(className)
-        call !FINDPROG(result, className)
-        if (result = '') then throw "NotFound", className : " needs to be compiled or does not exist!"
-        classFile = result<2,1>
-        acctName = ''
-        fileName = ''
-        itemName = ''
-        loop
-            check = removef(classFile, @DS)
-        until (status())
-            begin case
-                case (acctName = '')
-                    if (check = @ACCOUNT) then acctName = check
-                case (fileName = '')
-                    fileName = check
-                case 1
-                    fileName := "," : check
-            end case
-        repeat
-        cc = dcount(fileName, ',')
-        itemName = fileName[',', cc, 1]
-        fileName = fileName[',', 1, cc - 1]
-        cmd = "AnnotateTests " : fileName : " " : itemName
-        execute cmd capturing output
-        return
-    end
-    
     
 end

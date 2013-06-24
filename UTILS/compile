@@ -1,0 +1,62 @@
+$catalog compile global
+program compile
+
+    fileName = @SENTENCE[' ', 2, 1]
+    if (fileName = '') then abort "File name is required"
+    open fileName to fileVar else 
+        fileName = upcase(fileName)
+        open fileName to fileVar else stop 201, fileName
+    end
+
+    itemName = @SENTENCE[' ', 3, *]
+    begin case
+        case (itemName = '*')
+            selectv fileVar to itemList
+        case (itemName = '')
+            if (@SELECTED = 0) then abort "No active select list"
+            selecte to itemList
+        case 1
+            cmd = "SELECT " : fileName : " " : itemName
+            execute cmd capturing output rtnlist itemList
+    end case
+    
+    loop
+        readnext itemId from itemList else stop
+        gosub doCompile(fileVar, fileName, itemId)
+    repeat
+    
+    
+    local sub doCompile(fileVar, fileName, itemId)
+        read item from fileVar, itemId else
+            crt "[" : itemId : "] not on file"
+            return
+        end
+        newItem = ''
+        lines = dcount(item, @fm)
+        for l = 1 to lines
+            line = item<l>
+            begin case
+                case (trim(line) matches "'{'0X'}'0X")
+                    parts = parse(line, "0X'{'0X'}'0X", @fm)
+                    indent = parts<1>
+                    anno = matchField(parts<3>, "0X'='0Xý0X", 1)
+                    try
+                        annoObj = object("anno.":anno)
+                        annoObj->parse(line, item<l+1>)
+                        line = indent : annoObj->toString()
+                    catch SYS$ANY
+                        rest = parts<5>
+                        line = indent : "$* {" : anno 
+                        line := "}" : @fm : rest
+                    end
+            end case
+            newItem<-1> = line
+        next l
+        write newItem on fileVar, itemId
+        compile.cmd = "BASIC " : fileName : " " : itemId
+        execute compile.cmd
+        write item on fileVar, itemId
+        return
+    end
+
+end
