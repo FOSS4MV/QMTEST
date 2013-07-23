@@ -8,16 +8,16 @@ easy use of the assertions.
 
 Example:
 
-$catalog MyTestCase local
-{TestCase}
-class MyTestCase inherits QMTestCase
-	
-	{Test}
-	public sub testTrue()
-		me->assertTrue(@true)
+	$catalog MyTestCase local
+	{TestCase}
+	class MyTestCase inherits QMTestCase
+		
+		{Test}
+		public sub testTrue()
+			me->assertTrue(@true)
+		end
+		
 	end
-	
-end
 
 To compile use the COMPILE preprocessor rather than the regular QM BASIC
 command.  It prepends a $\* to each annotation so that the QM BASIC command
